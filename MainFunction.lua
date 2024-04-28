@@ -862,7 +862,6 @@ if busconfig.General.HighlightsEnabled then
 	end)
 	for i,playr in pairs(game.Players:GetPlayers()) do
 		if not playr.Character then playr.CharacterAdded:Wait() end
-		repeat game["Run Service"].Heartbeat:Wait() until playr.PlayerScripts
 		if playr.PlayerGui:FindFirstChild("HighlightGuiContainer") == nil then
 			local c = script.HighlightScript
 			local g = Instance.new("ScreenGui")
