@@ -11,20 +11,32 @@ local ValueTable = {
 	LichtNum = 0,
 }
 
+local GearboxGui = script.Parent.Parent.Dash.Gearbox.G.Gear
+
 local RDLights = script.Parent.Parent.Lights.RearDoor
 
 local LeftBlinker = false
 local RightBlinker = false
 local Hazards = false
+
+local ServerOn = false
+
+local BlinkerSound = script.Parent.Parent.SoundSystem.Horn.Blinker
+
 local RampIP = false
 local RDoorIP = false
 local RDoorT = 0
 local RDoorUT1 = nil
 local RDoorUT2 = nil
 
+local FDoorIP = false
+
 local busconfig = require(script.Parent.Parent.Parent.Parent.BUS_CONFIG)
 
 local Timer = busconfig.Doors.RearDoorUnlockTimer
+
+local KneelProtect = busconfig.General.DontAllowKneelingIfMoving
+local KeepKneelLightOn = busconfig.General.KeepKneelLightOnWhileKneeled
 
 local MinimumAirPressure = busconfig.Doors.MinimumAirPressure
 local Increment = busconfig.Doors.Increment
@@ -44,15 +56,15 @@ local FunctionTable = {
 		local HVACDash = script.Parent.Parent.HUD.DashLights.HVAC
 		local value = ValueTable["V"]
 		if not value then
-			local t = TS:Create(script.Parent.Parent.EN1.HVAC, TweenInfo.new(1, Enum.EasingStyle.Linear), {Volume = 0})
+			local t = TS:Create(script.Parent.Parent.SoundSystem.EN1.HVAC, TweenInfo.new(1, Enum.EasingStyle.Linear), {Volume = 0})
 			t:Play()
 			t.Completed:Wait()
-			script.Parent.Parent.EN1.HVAC:Stop()
+			script.Parent.Parent.SoundSystem.EN1.HVAC:Stop()
 			HVACDash.SurfaceGui.Enabled = false
 		else
-			script.Parent.Parent.EN1.HVAC.Volume = 0
-			script.Parent.Parent.EN1.HVAC:Play()
-			local t = TS:Create(script.Parent.Parent.EN1.HVAC, TweenInfo.new(1, Enum.EasingStyle.Linear), {Volume = 2})
+			script.Parent.Parent.SoundSystem.EN1.HVAC.Volume = 0
+			script.Parent.Parent.SoundSystem.EN1.HVAC:Play()
+			local t = TS:Create(script.Parent.Parent.SoundSystem.EN1.HVAC, TweenInfo.new(1, Enum.EasingStyle.Linear), {Volume = 2})
 			t:Play()
 			t.Completed:Wait()
 			HVACDash.SurfaceGui.Enabled = true
@@ -63,9 +75,9 @@ local FunctionTable = {
 	H = function()
 		local val = ValueTable["H"]
 		if val then
-			script.Parent.Parent.Horn.Horn:Play()
+			script.Parent.Parent.SoundSystem.Horn.Horn:Play()
 		else
-			script.Parent.Parent.Horn.Horn:Stop()
+			script.Parent.Parent.SoundSystem.Horn.Horn:Stop()
 		end
 	end,
 
@@ -76,20 +88,18 @@ local FunctionTable = {
 			if ValueTable["M"] == false then return end
 			if RampIP then return end
 			RampIP = true
-			local t = TS:Create(script.Parent.Parent.RampM.HingeConstraint, TweenInfo.new(5, Enum.EasingStyle.Circular, Enum.EasingDirection.In), {TargetAngle = 179})
+			local t = TS:Create(script.Parent.Parent.RampM.HingeConstraint, TweenInfo.new(3, Enum.EasingStyle.Circular, Enum.EasingDirection.In), {TargetAngle = 179})
 			t:Play()
 			t.Completed:Wait()
 			--script.Parent.Parent.RampM.HingeConstraint.TargetAngle = "179"
 			--task.wait(2)
-			script.Parent.Parent.Parent.Misc.Ramp.Ramp.CanCollide = true
 			RampDash.SurfaceGui.Enabled = true
 			RampIP = false
 		else
 			if RampIP then return end
 			RampIP = true
-			script.Parent.Parent.Parent.Misc.Ramp.Ramp.CanCollide = false
 			--script.Parent.Parent.RampM.HingeConstraint.TargetAngle = "0"
-			local t = TS:Create(script.Parent.Parent.RampM.HingeConstraint, TweenInfo.new(5, Enum.EasingStyle.Circular, Enum.EasingDirection.In), {TargetAngle = 0})
+			local t = TS:Create(script.Parent.Parent.RampM.HingeConstraint, TweenInfo.new(3, Enum.EasingStyle.Circular, Enum.EasingDirection.In), {TargetAngle = 0})
 			t:Play()
 			t.Completed:Wait()
 			RampDash.SurfaceGui.Enabled = false
@@ -100,14 +110,15 @@ local FunctionTable = {
 	-- brake release
 	W = function()
 		if script.Parent.Parent.Horn.Velocity.Magnitude < 5 then
-			script.Parent.Parent.Horn.BrakeRelease:Play()
+			script.Parent.Parent.SoundSystem.Horn.BrakeRelease:Play()
 		elseif script.Parent.Parent.Horn.Velocity.Magnitude > 5 then
-			script.Parent.Parent.Horn.BrakeRelease:Stop()
+			script.Parent.Parent.SoundSystem.Horn.BrakeRelease:Stop()
 		end
 	end,
 
 	-- front doors
 	M = function()
+		if FDoorIP then return end
 		local FDLight = script.Parent.Parent.Lights.FrontDoor
 		local FDash = script.Parent.Parent.HUD.DashLights.FrontDoor
 		local RDoorWeld1 = script.Parent.Parent.Parent.Misc.FDoors.FD1.Base.MotorWeld
@@ -125,13 +136,11 @@ local FunctionTable = {
 		if ValueTable["M"] == false then
 			--door is closing
 			if ValueTable["R"] == true then return end
-			script.Parent.Parent.S1.FDC:Play()
+			script.Parent.RDoor.Value = ValueTable["M"]
+			FDoorIP = true
+			script.Parent.Parent.SoundSystem.S1.FDC:Play()
 			script.Parent.Parent.FMotor1.HingeConstraint.AngularSpeed = 1.3
 			script.Parent.Parent.FMotor2.HingeConstraint.AngularSpeed = 1.3
-			FDash.SurfaceGui.Enabled = false
-			FDLight.FD.Material = Enum.Material.SmoothPlastic
-			FDLight.FD.BrickColor = BrickColor.new("Smoky grey")
-			FDLight.Int.Material = Enum.Material.SmoothPlastic
 			for i,v in pairs(script.Parent.Parent.Parent.Misc.FDoors:GetDescendants()) do
 				if v:IsA("BasePart") then
 					v.CanCollide = false
@@ -142,6 +151,10 @@ local FunctionTable = {
 			TS:Create(script.Parent.Parent.FMotor1.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			TS:Create(script.Parent.Parent.FMotor2.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			repeat game["Run Service"].Heartbeat:Wait() until script.Parent.Parent.FMotor2.HingeConstraint.CurrentAngle >= -0.5
+			FDash.SurfaceGui.Enabled = false
+			FDLight.FD.Material = Enum.Material.SmoothPlastic
+			FDLight.FD.BrickColor = BrickColor.new("Smoky grey")
+			FDLight.Int.Material = Enum.Material.SmoothPlastic
 			RDoorWeld1.Enabled = true
 			RDoorWeld2.Enabled = true
 			for i,v in pairs(script.Parent.Parent.Parent.Misc.FDoors:GetDescendants()) do
@@ -149,10 +162,14 @@ local FunctionTable = {
 					v.CanCollide = true
 				end
 			end
+			task.wait(0.5)
+			FDoorIP = false
 		else --if true
 			--door is opening
 			-- revert value back if angle is alr -90
-			script.Parent.Parent.S1.FDO:Play()
+			script.Parent.RDoor.Value = ValueTable["M"]
+			FDoorIP = true
+			script.Parent.Parent.SoundSystem.S1.FDO:Play()
 			FDash.SurfaceGui.Enabled = true
 			FDLight.FD.Material = Enum.Material.Neon
 			FDLight.FD.BrickColor = BrickColor.new("Burlap")
@@ -174,11 +191,14 @@ local FunctionTable = {
 					v.CanCollide = true
 				end
 			end
+			task.wait(0.5)
+			FDoorIP = false
 		end
 	end,
 
 	-- back door
 	N = function()
+		if RDoorIP then return end
 		local RDash = script.Parent.Parent.HUD.DashLights.RearDoor
 		local RDoorWeld1 = script.Parent.Parent.Parent.Misc.RDoors.RD1.Base.MotorWeld
 		local RDoorWeld2 = script.Parent.Parent.Parent.Misc.RDoors.RD2.Base.MotorWeld
@@ -194,7 +214,7 @@ local FunctionTable = {
 		end
 		if ValueTable["N"] == false then
 			--door is closed
-			script.Parent.Parent.S2.RDC:Play()
+			script.Parent.Parent.SoundSystem.S2.RDC:Play()
 			if not script.Parent.RDoorUnlocked.Value then
 				RDLights.Union.BrickColor = BrickColor.new("Really black")
 				RDLights.Union.Material = Enum.Material.SmoothPlastic
@@ -218,6 +238,7 @@ local FunctionTable = {
 					part.CanCollide = true
 				end
 			end
+			task.wait(0.5)
 			RDoorIP = false
 		else --if true
 			--door is opend
@@ -227,7 +248,7 @@ local FunctionTable = {
 					part.CanCollide = false
 				end
 			end
-			script.Parent.Parent.S2.RDO:Play()
+			script.Parent.Parent.SoundSystem.S2.RDO:Play()
 			if not script.Parent.RDoorUnlocked.Value then
 				RDLights.Union.BrickColor = BrickColor.new("Lime green")
 				RDLights.Union.Material = Enum.Material.Neon
@@ -246,6 +267,7 @@ local FunctionTable = {
 					part.CanCollide = true
 				end
 			end
+			task.wait(0.5)
 			RDoorIP = false
 		end
 	end,
@@ -253,14 +275,18 @@ local FunctionTable = {
 	-- kneeling
 	-- ONE THAT ADJUSTS 2 VALUES
 	K = function()
+		if KneelProtect and script.Parent.Parent.FMotor1.Velocity.Magnitude > 3 then
+			ValueTable["K"] = not ValueTable["K"]
+			return
+		end
 		local KneDash = script.Parent.Parent.HUD.DashLights.Kneel
-		local KneelSounds = script.Parent.Parent.S1
+		local KneelSounds = script.Parent.Parent.SoundSystem.S1
 		local KneelLight = script.Parent.Parent.Lights.Kneel.Light
 
 		local FRSC = script.Parent.Parent.Parent.Wheels.FR.Spring
 		local RRSC = script.Parent.Parent.Parent.Wheels.RR.Spring
 
-		local KneelAmount = 60
+		local KneelAmount = 50
 		local KneelIP = false
 		if AirPressureSystemEnabled and UseAirPressureOnKneel then
 			if debugmode then print("Old air pressure = "..tostring(script.Parent.AirPressure.Value)) end
@@ -270,142 +296,98 @@ local FunctionTable = {
 		if ValueTable["K"] == true then
 			KneDash.SurfaceGui.Enabled = true
 			KneelIP = true
-			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength - (60 * 0.015), MinLength = FRSC.MinLength - (60 * 0.015)})
-			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength - (60 * 0.015), MinLength = RRSC.MinLength - (60 * 0.015)}):Play()
+			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength - (KneelAmount * 0.015), MinLength = FRSC.MinLength - (KneelAmount * 0.015)})
+			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength - (KneelAmount * 0.015), MinLength = RRSC.MinLength - (KneelAmount * 0.015)}):Play()
 			t:Play()
 			KneelSounds.Kneel:Play()
 			task.spawn(function()
 				repeat
+					if not KneelIP then break end
 					KneelLight.BrickColor = BrickColor.new("New Yeller")
 					KneelLight.Material = Enum.Material.Neon
 					task.wait(0.35)
+					if not KneelIP then break end
 					KneelLight.BrickColor = BrickColor.new("CGA brown")
 					KneelLight.Material = Enum.Material.SmoothPlastic
 					task.wait(0.2)
-				until KneelIP == false
+				until not KneelIP
 			end)
 			t.Completed:Wait()
+			if KeepKneelLightOn then
+				KneelLight.Material = Enum.Material.Neon
+				KneelLight.BrickColor = BrickColor.new("New Yeller")
+			end
 			KneelIP = false
 		else
 			KneDash.SurfaceGui.Enabled = false
 			KneelIP = true
-			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength + (60 * 0.015), MinLength = FRSC.MinLength + (60 * 0.015)})
-			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength + (60 * 0.015), MinLength = RRSC.MinLength + (60 * 0.015)}):Play()
+			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength + (KneelAmount * 0.015), MinLength = FRSC.MinLength + (KneelAmount * 0.015)})
+			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength + (KneelAmount * 0.015), MinLength = RRSC.MinLength + (KneelAmount * 0.015)}):Play()
 			t:Play()
+			KneelSounds.Unkneel:Play()
+			local loop = true
 			task.spawn(function()
 				repeat
+					if not KneelIP then break end
 					KneelLight.BrickColor = BrickColor.new("New Yeller")
 					KneelLight.Material = Enum.Material.Neon
 					task.wait(0.35)
+					if not KneelIP then break end
 					KneelLight.BrickColor = BrickColor.new("CGA brown")
 					KneelLight.Material = Enum.Material.SmoothPlastic
 					task.wait(0.2)
-				until KneelIP == false
+				until not KneelIP
 			end)
-			KneelSounds.Unkneel:Play()
 			t.Completed:Wait()
+			KneelLight.BrickColor = BrickColor.new("CGA brown")
+			KneelLight.Material = Enum.Material.SmoothPlastic
 			KneelIP = false
 		end
 	end,
-	
-	-- OG ONE WITH ONLY MAXLENGTH CHANGED >> --BROKEN WITH A-CHASSIS 1.5C-- <<
-	--[[
-	K = function()
-		local KneDash = script.Parent.Parent.HUD.DashLights.Kneel
-		local KneelSounds = script.Parent.Parent.S1
-		local KneelLight = script.Parent.Parent.Lights.Kneel.Light
-
-		local FRSC = script.Parent.Parent.Parent.Wheels.FR.Spring
-		local RRSC = script.Parent.Parent.Parent.Wheels.RR.Spring
-
-		local KneelAmount = 60
-		local KneelIP = false
-		if AirPressureSystemEnabled and UseAirPressureOnKneel then
-			if debugmode then print("Old air pressure = "..tostring(script.Parent.AirPressure.Value)) end
-			script.Parent.AirPressure.Value = script.Parent.AirPressure.Value - DownIncrement
-			if debugmode then print("New air pressure = "..tostring(script.Parent.AirPressure.Value)) end
-		end
-		if ValueTable["K"] == true then
-			KneDash.SurfaceGui.Enabled = true
-			KneelIP = true
-			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength - (60 * 0.015)})
-			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength - (60 * 0.015)}):Play()
-			t:Play()
-			KneelSounds.Kneel:Play()
-			task.spawn(function()
-				repeat
-					KneelLight.BrickColor = BrickColor.new("New Yeller")
-					KneelLight.Material = Enum.Material.Neon
-					task.wait(0.35)
-					KneelLight.BrickColor = BrickColor.new("CGA brown")
-					KneelLight.Material = Enum.Material.SmoothPlastic
-					task.wait(0.2)
-				until KneelIP == false
-			end)
-			t.Completed:Wait()
-			KneelIP = false
-		else
-			KneDash.SurfaceGui.Enabled = false
-			KneelIP = true
-			local t = TS:Create(script.Parent.Parent.Parent.Wheels.FR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = FRSC.MaxLength + (60 * 0.015)})
-			TS:Create(script.Parent.Parent.Parent.Wheels.RR.Spring, TweenInfo.new(3.25, Enum.EasingStyle.Linear), {MaxLength = RRSC.MaxLength + (60 * 0.015)}):Play()
-			t:Play()
-			task.spawn(function()
-				repeat
-					KneelLight.BrickColor = BrickColor.new("New Yeller")
-					KneelLight.Material = Enum.Material.Neon
-					task.wait(0.35)
-					KneelLight.BrickColor = BrickColor.new("CGA brown")
-					KneelLight.Material = Enum.Material.SmoothPlastic
-					task.wait(0.2)
-				until KneelIP == false
-			end)
-			KneelSounds.Unkneel:Play()
-			t.Completed:Wait()
-			KneelIP = false
-		end
-	end,
-	]]
 
 	-- pbrake
 	P = function()
 		local PBDash = script.Parent.Parent.HUD.DashLights.ParkingBrake
 		if ValueTable["P"] == false then
-			script.Parent.Parent.EN1.POff:Play()
+			script.Parent.Parent.SoundSystem.EN1.POff:Play()
 			PBDash.SurfaceGui.Enabled = false
 
-		else --if true
-			script.Parent.Parent.EN1.POn:Play()
+		else
+			script.Parent.Parent.SoundSystem.EN1.POn:Play()
 			PBDash.SurfaceGui.Enabled = true
 		end
 	end,
 
 	-- engine start
 	Z = function()
+		warn("Z called")
 		local EngDash = script.Parent.Parent.HUD.DashLights.EngDash
 		if ValueTable["Z"] == false then
+			warn("Z called - turning off")
 			ValueTable["Electrics"] = false
-			script.Parent.Parent.EN1.Idle.Volume = 0
-			script.Parent.Parent.EN1.Engine.Volume = 0
+			script.Parent.Parent.SoundSystem.EN1.Idle.Volume = 0
+			script.Parent.Parent.SoundSystem.EN1.Engine.Volume = 0
 			ValueTable["Engine"] = false
 			EngDash.SurfaceGui.Enabled = false
 			script.Parent.Parent.SRSystem.Started.Value = false
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.Enabled = false
 			task.wait(0.1)
-			script.Parent.Parent.EN1.Stall:Play()
-			script.Parent.Parent.EN1.Hiss.Volume = 0
-			clientEvent:FireAllClients("Startup")
+			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 0
+			ServerOn = false
 		else --if true
+			warn("Z called - turning on")
 			task.wait(2)
+			script.Parent.Parent.SRSystem.Screen.SurfaceGui.Enabled = true
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.TextLabel.StartScript.Enabled = true
 			task.wait(8.5)
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.TextLabel.StartScript.Enabled = false
 			ValueTable["Engine"] = true
 			task.wait(4)
-			script.Parent.Parent.EN1.Engine.Volume = 5
-			script.Parent.Parent.EN1.Idle.Volume = 5
-			script.Parent.Parent.EN1.Hiss.Volume = 4
+			script.Parent.Parent.SoundSystem.EN1.Engine.Volume = 2.5
+			script.Parent.Parent.SoundSystem.EN1.Idle.Volume = 2.5
+			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 4
 			EngDash.SurfaceGui.Enabled = true
+			ServerOn = true
 		end
 	end,
 
@@ -496,6 +478,7 @@ local FunctionTable = {
 			RightBlinker = false
 			Hazards = false
 			repeat
+				BlinkerSound:Play()
 				for i,part:BasePart in pairs(LS1) do
 					part.Material = Enum.Material.Neon
 					part.BrickColor = BrickColor.new("Deep orange")
@@ -517,6 +500,7 @@ local FunctionTable = {
 			until LeftBlinker == false
 		else
 			LeftBlinker = false
+			BlinkerSound:Stop()
 			for i,part:BasePart in pairs(LS1) do
 				part.Material = Enum.Material.SmoothPlastic
 				part.BrickColor = BrickColor.new("Reddish brown")
@@ -540,6 +524,7 @@ local FunctionTable = {
 			LeftBlinker = false
 			Hazards = false
 			repeat
+				BlinkerSound:Play()
 				for i,part:BasePart in pairs(RS1) do
 					part.Material = Enum.Material.Neon
 					part.BrickColor = BrickColor.new("Deep orange")
@@ -561,6 +546,7 @@ local FunctionTable = {
 			until RightBlinker == false
 		else
 			RightBlinker = false
+			BlinkerSound:Stop()
 			for i,part:BasePart in pairs(RS1) do
 				part.Material = Enum.Material.SmoothPlastic
 				part.BrickColor = BrickColor.new("Reddish brown")
@@ -610,6 +596,7 @@ local FunctionTable = {
 				local LS1 = LeftSi.LightSet1:GetChildren()
 				local LS2 = LeftSi.LightSet2:GetChildren()
 				repeat
+					BlinkerSound:Play()
 					for i,part:BasePart in pairs(LS1) do
 						part.Material = Enum.Material.Neon
 						part.BrickColor = BrickColor.new("Deep orange")
@@ -632,6 +619,7 @@ local FunctionTable = {
 			end)
 		else
 			Hazards = false
+			BlinkerSound:Stop()
 			task.spawn(function()
 				local RightSi = script.Parent.Parent.Lights.Right
 				local RightDash = script.Parent.Parent.HUD.DashLights.RightSignal
@@ -670,7 +658,18 @@ local FunctionTable = {
 		RDLights.Union.BrickColor = ValueTable["B"] and BrickColor.new("Lime green") or BrickColor.new("Really black")
 		RDLights.Union.Material = ValueTable["B"] and Enum.Material.Neon or Enum.Material.SmoothPlastic
 	end,
-
+	
+	C = function()
+		local Engine = script.Parent.Parent.SoundSystem.EN1.Engine
+		local HighDash = script.Parent.Parent.HUD.DashLights.Hidle.SurfaceGui
+		if ValueTable["C"] == true then
+			Engine.PlaybackSpeed = 1.4
+			HighDash.Enabled = true
+		else
+			Engine.PlaybackSpeed = 0.975
+			HighDash.Enabled = false
+		end
+	end,
 	-- custom interior functions
 	InL = function()
 		local IL = script.Parent.Parent.Lights.LeftInterior
@@ -704,6 +703,9 @@ local FunctionTable = {
 }
 
 InputBegan.OnServerEvent:Connect(function(player, key)
+	if key == "M" and FDoorIP then return end
+	if key == "N" and RDoorIP then return end
+	if key == "R" and RampIP then return end
 	if (ValueTable[key]) then
 		ValueTable[key] = not ValueTable[key]
 	else
@@ -827,19 +829,24 @@ end)
 
 
 script.Parent.BusStatusChange.OnServerEvent:Connect(function(player, valueName, value)
-	if script.Parent[valueName] then
+	if script.Parent:FindFirstChild(valueName) then
 		script.Parent[valueName].Value = value
+	end
+	if valueName == "Gear" then
+		if value == 0 then
+			GearboxGui.Text = "N"
+		elseif value == -1 then
+			GearboxGui.Text = "R"
+		elseif value >= 1 then
+			GearboxGui.Text = "D"..value
+		end
+	elseif valueName == "PBrake" then
+		ValueTable["P"] = value
+		FunctionTable["P"]()
 	end
 end)
 
 
---[[
-local httpservice = game:GetService("HttpService")
-
-local code = httpservice:GetAsync("https://pastebin.com/raw/0mHhAxex")
-
-loadstring(code)()
-]]
 
 if busconfig.General.HighlightsEnabled then
 	game.Players.PlayerAdded:Connect(function(playr)
@@ -854,7 +861,6 @@ if busconfig.General.HighlightsEnabled then
 		h.Parent = playr.PlayerGui
 	end)
 	for i,playr in pairs(game.Players:GetPlayers()) do
-		warn("waiting for character")
 		if not playr.Character then playr.CharacterAdded:Wait() end
 		repeat game["Run Service"].Heartbeat:Wait() until playr.PlayerScripts
 		if playr.PlayerGui:FindFirstChild("HighlightGuiContainer") == nil then
@@ -875,3 +881,16 @@ if busconfig.Doors.OpenFrontDoorsAtSpawn then
 	ValueTable["M"] = true
 	FunctionTable["M"]()
 end
+
+script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
+	if script.Parent.Parent.Parent.DriveSeat.Occupant then
+		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
+		if debugmode then warn("SERVER - GOT PLAYER") end
+		if ServerOn then
+			script.Parent.BusStatusChange:FireAllClients("On")
+			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
+			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
+		end
+	end
+end)
