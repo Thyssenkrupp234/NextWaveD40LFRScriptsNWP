@@ -1,5 +1,5 @@
+if require(script.Parent.Parent.Parent.Parent.BUS_CONFIG).General.debugmode then warn("Using local version of MainFunction") end
 warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". v1.x made by RedLightning725, v2.0 Scripted by thyssenkrupp234, based off v1.")
-
 local InputBegan = script.Parent.InputBegan
 local InputEnded = script.Parent.InputEnded
 
@@ -163,6 +163,7 @@ local FunctionTable = {
 			FDoorIP = false
 		else --if true
 			--door is opening
+			-- revert value back if angle is alr -90
 			script.Parent.RDoor.Value = ValueTable["M"]
 			FDoorIP = true
 			script.Parent.Parent.SoundSystem.S1.FDO:Play()
@@ -364,7 +365,9 @@ local FunctionTable = {
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.Enabled = false
 			task.wait(0.1)
 			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 0
+			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = false
 			ServerOn = false
+			warn("ServerOn should be false. ServerOn value: "..tostring(ServerOn))
 		else --if true
 			warn("Z called - turning on")
 			task.wait(2)
@@ -378,6 +381,7 @@ local FunctionTable = {
 			script.Parent.Parent.SoundSystem.EN1.Idle.Volume = 2.5
 			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 4
 			EngDash.SurfaceGui.Enabled = true
+			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
 			ServerOn = true
 		end
 	end,
@@ -651,13 +655,13 @@ local FunctionTable = {
 	end,
 
 	C = function()
-		local Engine = script.Parent.Parent.SoundSystem.EN1.Engine
+		local Engine = script.Parent.Parent.SoundSystem.EN1.Idle
 		local HighDash = script.Parent.Parent.HUD.DashLights.Hidle.SurfaceGui
 		if ValueTable["C"] == true then
 			Engine.PlaybackSpeed = 1.4
 			HighDash.Enabled = true
 		else
-			Engine.PlaybackSpeed = 0.975
+			Engine.PlaybackSpeed = 1
 			HighDash.Enabled = false
 		end
 	end,
@@ -877,12 +881,12 @@ script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Conne
 	if script.Parent.Parent.Parent.DriveSeat.Occupant then
 		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
 		if debugmode then warn("SERVER - GOT PLAYER") end
+		warn("Is bus on? "..tostring(ServerOn))
 		if ServerOn then
-			script.Parent.BusStatusChange:FireAllClients("On")
+			warn("Bus seems to be on. Starting it up.")
 			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
 			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
 		end
 	end
 end)
-
 warn("NextWave Chassis v2.0 has successfully started up on bus "..script.Parent.Parent.Parent.Parent.Name..". Enjoy ;D")
