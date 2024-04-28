@@ -213,11 +213,6 @@ local FunctionTable = {
 			end
 			RDoorWeld1.Enabled = false
 			RDoorWeld2.Enabled = false
-			for i,part in pairs(script.Parent.Parent.Parent.Misc.RDoors:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CanCollide = false
-				end
-			end
 			TS:Create(script.Parent.Parent.RMotor1.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			TS:Create(script.Parent.Parent.RMotor2.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			repeat game["Run Service"].Heartbeat:Wait() until script.Parent.Parent.RMotor2.HingeConstraint.CurrentAngle >= -0.5
@@ -254,11 +249,6 @@ local FunctionTable = {
 			RDoorWeld2.Enabled = true
 			script.Parent.RDoor.Value = true
 			RDash.SurfaceGui.Enabled = true
-			for i,part in pairs(script.Parent.Parent.Parent.Misc.RDoors:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CanCollide = true
-				end
-			end
 			task.wait(0.5)
 			RDoorIP = false
 		end
