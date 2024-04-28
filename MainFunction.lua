@@ -1,4 +1,4 @@
-warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". Scripted by thyssenkrupp234.")
+warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". v1.x made by RedLightning725, v2.0 Scripted by thyssenkrupp234, based off v1.")
 
 local InputBegan = script.Parent.InputBegan
 local InputEnded = script.Parent.InputEnded
