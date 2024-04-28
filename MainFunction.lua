@@ -650,15 +650,15 @@ local FunctionTable = {
 			end)
 		end
 	end,
-	
+
 	-- unlock rear
-	
+
 	B = function()
 		script.Parent.RDoorUnlocked.Value = ValueTable["B"]
 		RDLights.Union.BrickColor = ValueTable["B"] and BrickColor.new("Lime green") or BrickColor.new("Really black")
 		RDLights.Union.Material = ValueTable["B"] and Enum.Material.Neon or Enum.Material.SmoothPlastic
 	end,
-	
+
 	C = function()
 		local Engine = script.Parent.Parent.SoundSystem.EN1.Engine
 		local HighDash = script.Parent.Parent.HUD.DashLights.Hidle.SurfaceGui
