@@ -847,11 +847,12 @@ if busconfig.General.HighlightsEnabled then
 	game.Players.PlayerAdded:Connect(function(playr)
 		if not playr.Character then playr.CharacterAdded:Wait() end
 		local c = script:WaitForChild("HighlightScript"):Clone()
+		c.Enabled = true
 		local g = Instance.new("ScreenGui")
 		g.Name = "HighlightGuiContainer"
 		g.Parent = playr.PlayerGui
 		c.Parent = g
-		c.Enabled = true
+		g.Enabled = true
 		local h = script.HoverGui:Clone()
 		h.Parent = playr.PlayerGui
 	end)
@@ -859,6 +860,7 @@ if busconfig.General.HighlightsEnabled then
 		if not playr.Character then playr.CharacterAdded:Wait() end
 		if playr.PlayerGui:FindFirstChild("HighlightGuiContainer") == nil then
 			local c = script:WaitForChild("HighlightScript"):Clone()
+			c.Enabled = true
 			local g = Instance.new("ScreenGui")
 			g.Name = "HighlightGuiContainer"
 			g.Parent = playr.PlayerGui
