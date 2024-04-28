@@ -143,11 +143,6 @@ local FunctionTable = {
 			script.Parent.Parent.SoundSystem.S1.FDC:Play()
 			script.Parent.Parent.FMotor1.HingeConstraint.AngularSpeed = 1.3
 			script.Parent.Parent.FMotor2.HingeConstraint.AngularSpeed = 1.3
-			for i,v in pairs(script.Parent.Parent.Parent.Misc.FDoors:GetDescendants()) do
-				if v:IsA("BasePart") then
-					v.CanCollide = false
-				end
-			end
 			RDoorWeld1.Enabled = false
 			RDoorWeld2.Enabled = false
 			TS:Create(script.Parent.Parent.FMotor1.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
@@ -168,7 +163,6 @@ local FunctionTable = {
 			FDoorIP = false
 		else --if true
 			--door is opening
-			-- revert value back if angle is alr -90
 			script.Parent.RDoor.Value = ValueTable["M"]
 			FDoorIP = true
 			script.Parent.Parent.SoundSystem.S1.FDO:Play()
@@ -188,11 +182,6 @@ local FunctionTable = {
 			repeat game["Run Service"].Heartbeat:Wait() until script.Parent.Parent.FMotor2.HingeConstraint.CurrentAngle <= -89.5
 			RDoorWeld1.Enabled = true
 			RDoorWeld2.Enabled = true
-			for i,v in pairs(script.Parent.Parent.Parent.Misc.FDoors:GetDescendants()) do
-				if v:IsA("BasePart") then
-					v.CanCollide = true
-				end
-			end
 			task.wait(0.5)
 			FDoorIP = false
 		end
