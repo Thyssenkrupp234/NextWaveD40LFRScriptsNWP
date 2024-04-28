@@ -1,3 +1,5 @@
+warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". Scripted by thyssenkrupp234.")
+
 local InputBegan = script.Parent.InputBegan
 local InputEnded = script.Parent.InputEnded
 
@@ -893,3 +895,5 @@ script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Conne
 		end
 	end
 end)
+
+warn("NextWave Chassis v2.0 has successfully started up on bus "..script.Parent.Parent.Parent.Parent.Name..". Enjoy ;D")
