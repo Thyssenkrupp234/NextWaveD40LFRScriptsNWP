@@ -32,6 +32,8 @@ local RDoorUT2 = nil
 
 local FDoorIP = false
 
+local CurrentOccupant = nil
+
 local busconfig = require(script.Parent.Parent.Parent.Parent.BUS_CONFIG)
 
 local Timer = busconfig.Doors.RearDoorUnlockTimer
@@ -212,6 +214,11 @@ local FunctionTable = {
 			end
 			RDoorWeld1.Enabled = false
 			RDoorWeld2.Enabled = false
+			for i,part in pairs(script.Parent.Parent.Parent.Misc.RDoors:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
 			TS:Create(script.Parent.Parent.RMotor1.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			TS:Create(script.Parent.Parent.RMotor2.HingeConstraint, ValueTable["FDoorTIClose"], {TargetAngle = 0}):Play()
 			repeat game["Run Service"].Heartbeat:Wait() until script.Parent.Parent.RMotor2.HingeConstraint.CurrentAngle >= -0.5
@@ -248,6 +255,11 @@ local FunctionTable = {
 			RDoorWeld2.Enabled = true
 			script.Parent.RDoor.Value = true
 			RDash.SurfaceGui.Enabled = true
+			for i,part in pairs(script.Parent.Parent.Parent.Misc.RDoors:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = true
+				end
+			end
 			task.wait(0.5)
 			RDoorIP = false
 		end
@@ -341,10 +353,10 @@ local FunctionTable = {
 
 	-- engine start
 	Z = function()
-		warn("Z called")
+		if debugmode then warn("Z called") end
 		local EngDash = script.Parent.Parent.HUD.DashLights.EngDash
 		if ValueTable["Z"] == false then
-			warn("Z called - turning off")
+			if debugmode then warn("Z called - turning off") end
 			ValueTable["Electrics"] = false
 			script.Parent.Parent.SoundSystem.EN1.Idle.Volume = 0
 			script.Parent.Parent.SoundSystem.EN1.Engine.Volume = 0
@@ -355,10 +367,14 @@ local FunctionTable = {
 			task.wait(0.1)
 			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 0
 			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = false
+			if CurrentOccupant then
+				if debugmode then warn("Occupant found") end
+				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = false
+			end
 			ServerOn = false
-			warn("ServerOn should be false. ServerOn value: "..tostring(ServerOn))
+			if debugmode then warn("ServerOn should be false. ServerOn value: "..tostring(ServerOn)) end
 		else --if true
-			warn("Z called - turning on")
+			if debugmode then warn("Z called - turning on") end
 			task.wait(2)
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.Enabled = true
 			script.Parent.Parent.SRSystem.Screen.SurfaceGui.TextLabel.StartScript.Enabled = true
@@ -371,6 +387,10 @@ local FunctionTable = {
 			script.Parent.Parent.SoundSystem.EN1.Hiss.Volume = 4
 			EngDash.SurfaceGui.Enabled = true
 			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
+			if CurrentOccupant then
+				if debugmode then warn("Occupant found") end
+				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = true
+			end
 			ServerOn = true
 		end
 	end,
@@ -871,10 +891,11 @@ script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Conne
 	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
 	if script.Parent.Parent.Parent.DriveSeat.Occupant then
 		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
+		CurrentOccupant = player
 		if debugmode then warn("SERVER - GOT PLAYER") end
-		warn("Is bus on? "..tostring(ServerOn))
+		if debugmode then warn("Is bus on? "..tostring(ServerOn)) end
 		if ServerOn then
-			warn("Bus seems to be on. Starting it up.")
+			if debugmode then warn("Bus seems to be on. Starting it up.") end
 			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
 			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
 		end
