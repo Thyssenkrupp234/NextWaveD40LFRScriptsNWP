@@ -889,7 +889,9 @@ end
 
 script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
 	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
-	if script.Parent.Parent.Parent.DriveSeat.Occupant then
+	task.wait()
+	warn(script.Parent.Parent.Parent.DriveSeat.Occupant)
+	if script.Parent.Parent.Parent.DriveSeat.Occupant ~= nil then
 		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
 		CurrentOccupant = player
 		if debugmode then warn("SERVER - GOT PLAYER") end
