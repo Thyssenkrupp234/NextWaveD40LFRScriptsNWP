@@ -772,6 +772,25 @@ InputEnded.OnServerEvent:Connect(function(player, key)
 	end
 end)
 
+script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
+	task.wait()
+	warn(script.Parent.Parent.Parent.DriveSeat.Occupant)
+	if script.Parent.Parent.Parent.DriveSeat.Occupant ~= nil then
+		if debugmode then warn(script.Parent.Parent.Parent.DriveSeat.Occupant) end
+		task.wait()
+		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
+		CurrentOccupant = player
+		if debugmode then warn("SERVER - GOT PLAYER") end
+		if debugmode then warn("Is bus on? "..tostring(ServerOn)) end
+		if ServerOn then
+			if debugmode then warn("Bus seems to be on. Starting it up.") end
+			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
+			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
+		end
+	end
+end)
+
 if AirPressureSystemEnabled then
 	game["Run Service"].Heartbeat:Connect(function()
 		if script.Parent.IsOn.Value then
@@ -886,21 +905,4 @@ if busconfig.Doors.OpenFrontDoorsAtSpawn then
 	ValueTable["M"] = true
 	FunctionTable["M"]()
 end
-
-script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
-	task.wait()
-	warn(script.Parent.Parent.Parent.DriveSeat.Occupant)
-	if script.Parent.Parent.Parent.DriveSeat.Occupant ~= nil then
-		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
-		CurrentOccupant = player
-		if debugmode then warn("SERVER - GOT PLAYER") end
-		if debugmode then warn("Is bus on? "..tostring(ServerOn)) end
-		if ServerOn then
-			if debugmode then warn("Bus seems to be on. Starting it up.") end
-			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
-			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
-		end
-	end
-end)
 warn("NextWave Chassis v2.0 has successfully started up on bus "..script.Parent.Parent.Parent.Parent.Name..". Enjoy ;D")
