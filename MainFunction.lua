@@ -4,13 +4,11 @@ local InputEnded = script.Parent.InputEnded
 
 local TS = game:GetService("TweenService")
 
-local ValueTable = {
-	FDoorTIOpen =  TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
-	FDoorTIClose =  TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
-	R = false,
-	M = false,
-	LichtNum = 0,
-}
+ValueTable.FDoorTIOpen = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+ValueTable.FDoorTIClose =  TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+ValueTable.R = false
+ValueTable.M = false
+ValueTable.LichtNum = 0
 
 local GearboxGui = script.Parent.Parent.Dash.Gearbox.G.Gear
 
@@ -21,6 +19,9 @@ local RightBlinker = false
 local Hazards = false
 
 local ServerOn = false
+
+local Throttle = false
+local Smoke = script.Parent.Parent.ExhaustEmitter.Smoke
 
 local BlinkerSound = script.Parent.Parent.SoundSystem.Horn.Blinker
 
@@ -35,6 +36,8 @@ local FDoorIP = false
 local CurrentOccupant = nil
 
 local busconfig = require(script.Parent.Parent.Parent.Parent.BUS_CONFIG)
+
+local UseSmoke = busconfig.General.UseSmokeEmitter
 
 local Timer = busconfig.Doors.RearDoorUnlockTimer
 
@@ -371,6 +374,9 @@ local FunctionTable = {
 				if debugmode then warn("Occupant found") end
 				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = false
 			end
+			if UseSmoke then
+				script.Parent.Parent.ExhaustEmitter.Smoke.Enabled = false
+			end
 			ServerOn = false
 			if debugmode then warn("ServerOn should be false. ServerOn value: "..tostring(ServerOn)) end
 		else --if true
@@ -390,6 +396,9 @@ local FunctionTable = {
 			if CurrentOccupant then
 				if debugmode then warn("Occupant found") end
 				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = true
+			end
+			if UseSmoke then
+				script.Parent.Parent.ExhaustEmitter.Smoke.Enabled = true
 			end
 			ServerOn = true
 		end
@@ -703,8 +712,17 @@ local FunctionTable = {
 			IR.Bulb.Light.Enabled = false
 		end
 	end,
-
 }
+
+for i,CustomFunction in pairs(CustomFunctions) do
+	if FunctionTable[i] then
+		if debugmode then warn("Found custom function that needs to over-write default function. Function key: "..i) end
+		FunctionTable[i] = CustomFunction
+	else
+		if debugmode then warn("Found custom function that doesn't need to overwrite. Adding custom function: "..i) end
+		FunctionTable[i] = CustomFunction
+	end
+end
 
 InputBegan.OnServerEvent:Connect(function(player, key)
 	if key == "M" and FDoorIP then return end
@@ -768,25 +786,6 @@ InputEnded.OnServerEvent:Connect(function(player, key)
 		ValueTable[key] = false
 		if FunctionTable[key] then
 			FunctionTable[key]()
-		end
-	end
-end)
-
-script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
-	task.wait()
-	warn(script.Parent.Parent.Parent.DriveSeat.Occupant)
-	if script.Parent.Parent.Parent.DriveSeat.Occupant ~= nil then
-		if debugmode then warn(script.Parent.Parent.Parent.DriveSeat.Occupant) end
-		task.wait()
-		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
-		CurrentOccupant = player
-		if debugmode then warn("SERVER - GOT PLAYER") end
-		if debugmode then warn("Is bus on? "..tostring(ServerOn)) end
-		if ServerOn then
-			if debugmode then warn("Bus seems to be on. Starting it up.") end
-			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
-			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
 		end
 	end
 end)
@@ -866,6 +865,14 @@ script.Parent.BusStatusChange.OnServerEvent:Connect(function(player, valueName, 
 	elseif valueName == "PBrake" then
 		ValueTable["P"] = value
 		FunctionTable["P"]()
+	elseif valueName == "RPM" and script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value and UseSmoke then
+		Smoke.Size = value/1000+tonumber(Throttle and 5 or 0)
+		Smoke.TimeScale = value/1000
+
+	elseif valueName == "Throttle" and value == 1 then
+		Throttle = true
+	elseif ValueTable == "Throttle" and value == 0 then
+		Throttle = false
 	end
 end)
 
@@ -905,4 +912,21 @@ if busconfig.Doors.OpenFrontDoorsAtSpawn then
 	ValueTable["M"] = true
 	FunctionTable["M"]()
 end
+
+script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+	if debugmode then warn("SERVER - OCCUPANT CHANGE") end
+	if debugmode then warn(script.Parent.Parent.Parent.DriveSeat.Occupant) end
+	task.wait()
+	if script.Parent.Parent.Parent.DriveSeat.Occupant ~= nil then
+		local player = game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent)
+		CurrentOccupant = player
+		if debugmode then warn("SERVER - GOT PLAYER") end
+		if debugmode then warn("Is bus on? "..tostring(ServerOn)) end
+		if ServerOn then
+			if debugmode then warn("Bus seems to be on. Starting it up.") end
+			script.Parent.Parent.Parent["A-Chassis Tune"]["A-Chassis Interface"].IsOn.Value = true
+			if debugmode then warn("SERVER - REQUESTED FOR CLIENT TO STARTUP") end
+		end
+	end
+end)
 warn("NextWave Chassis v2.0 has successfully started up on bus "..script.Parent.Parent.Parent.Parent.Name..". Enjoy ;D")
