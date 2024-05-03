@@ -4,7 +4,7 @@ local InputEnded = script.Parent.InputEnded
 
 local TS = game:GetService("TweenService")
 
-local ValueTable = {
+ValueTable = {
 	FDoorTIOpen = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
 	FDoorTIClose =  TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
 	R = false,
