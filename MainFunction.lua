@@ -1,4 +1,4 @@
-warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". v1.x made by RedLightning725, v2.0 Scripted by thyssenkrupp234, based off v1.")
+warn("NextWave Chassis v2.0 initiating on bus "..script.Parent.Parent.Parent.Parent.Name..". v1.x made by RedLightning725, v2.1 Scripted by thyssenkrupp234, based off v1.")
 local InputBegan = script.Parent.InputBegan
 local InputEnded = script.Parent.InputEnded
 
@@ -373,6 +373,9 @@ local FunctionTable = {
 			if CurrentOccupant then
 				if debugmode then warn("Occupant found") end
 				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = false
+
+			elseif script.Parent.Parent.Parent.DriveSeat.Occupant then
+				game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent).PlayerGui["A-Chassis Interface"].IsOn.Value = false
 			end
 			if UseSmoke then
 				script.Parent.Parent.ExhaustEmitter.Smoke.Enabled = false
@@ -396,6 +399,9 @@ local FunctionTable = {
 			if CurrentOccupant then
 				if debugmode then warn("Occupant found") end
 				CurrentOccupant.PlayerGui["A-Chassis Interface"].IsOn.Value = true
+
+			elseif script.Parent.Parent.Parent.DriveSeat.Occupant then
+				game.Players:GetPlayerFromCharacter(script.Parent.Parent.Parent.DriveSeat.Occupant.Parent).PlayerGui["A-Chassis Interface"].IsOn.Value = true
 			end
 			if UseSmoke then
 				script.Parent.Parent.ExhaustEmitter.Smoke.Enabled = true
@@ -879,6 +885,7 @@ end)
 
 
 if busconfig.General.HighlightsEnabled then
+	
 	game.Players.PlayerAdded:Connect(function(playr)
 		if not playr.Character then playr.CharacterAdded:Wait() end
 		local c = script:WaitForChild("HighlightScript"):Clone()
@@ -907,10 +914,70 @@ if busconfig.General.HighlightsEnabled then
 	end
 end
 
+
+
 if busconfig.Doors.OpenFrontDoorsAtSpawn then
-	task.wait(2)
-	ValueTable["M"] = true
-	FunctionTable["M"]()
+	task.spawn(function()
+		task.wait(2)
+		ValueTable["M"] = true
+		FunctionTable["M"]()
+	end)
+end
+
+-- assign fleet function
+
+if busconfig.FleetGeneration.FleetGenEnabled then
+	local NumbersFolder = script.Parent.Parent.FleetNumbers
+	local lower = busconfig.FleetGeneration.LowestPossibleFleet
+	local higher = busconfig.FleetGeneration.HighestPossibleFleet
+
+	if not busconfig.FleetGeneration.PreventDuplicateFleet then -- if prevent system is disabled
+		local fleet = tostring(math.random(lower, higher))
+
+		for i,FleetNumber in pairs(NumbersFolder:GetChildren()) do
+			if FleetNumber.Name == "FleetNo" and FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel") then -- if it's a fleet number thing
+				FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel").Text = fleet
+			end
+		end
+
+	else -- prevent
+
+		local UnUsedFleets = {}
+
+		for i=lower,higher do
+			if workspace:FindFirstChild(i) == nil then
+				table.insert(UnUsedFleets, i)
+			end
+		end
+
+		if #UnUsedFleets >= 1 then
+			local fleet = UnUsedFleets[math.random(1, #UnUsedFleets)]
+			for i,FleetNumber in pairs(NumbersFolder:GetChildren()) do
+				if FleetNumber.Name == "FleetNo" and FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel") then -- if it's a fleet number thing
+					FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel").Text = fleet
+				end
+			end
+
+		else -- no fleets available
+
+			if busconfig.FleetGeneration.Behaviour == "DontAssign" then return end
+			if busconfig.FleetGeneration.Behaviour == "AssignRandom" then
+				local fleet = tostring(math.random(lower, higher))
+
+				for i,FleetNumber in pairs(NumbersFolder:GetChildren()) do
+					if FleetNumber.Name == "FleetNo" and FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel") then -- if it's a fleet number thing
+						FleetNumber:FindFirstChildWhichIsA("SurfaceGui"):FindFirstChildWhichIsA("TextLabel").Text = fleet
+					end
+				end
+			end
+			if busconfig.FleetGeneration.Behaviour == "RemoveBus" then
+				warn("All fleets are taken, and behaviour is to destroy bus. Destroying!")
+				task.wait(0.5)
+				script.Parent.Parent.Parent.Parent:Destroy()
+			end
+
+		end
+	end
 end
 
 script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
@@ -929,4 +996,5 @@ script.Parent.Parent.Parent.DriveSeat:GetPropertyChangedSignal("Occupant"):Conne
 		end
 	end
 end)
+
 warn("NextWave Chassis v2.0 has successfully started up on bus "..script.Parent.Parent.Parent.Parent.Name..". Enjoy ;D")
