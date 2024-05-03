@@ -23,7 +23,6 @@ local Hazards = false
 local ServerOn = false
 
 local Throttle = false
-local Smoke = script.Parent.Parent.ExhaustEmitter.Smoke
 
 local BlinkerSound = script.Parent.Parent.SoundSystem.Horn.Blinker
 
@@ -40,6 +39,14 @@ local CurrentOccupant = nil
 local busconfig = require(script.Parent.Parent.Parent.Parent.BUS_CONFIG)
 
 local UseSmoke = busconfig.General.UseSmokeEmitter
+
+if UseSmoke and not script.Parent.Parent:FindFirstChild("ExhaustEmitter") then
+	UseSmoke = false
+end
+	
+if UseSmoke then
+	Smoke = script.Parent.Parent.ExhaustEmitter.Smoke
+end
 
 local Timer = busconfig.Doors.RearDoorUnlockTimer
 
