@@ -4,11 +4,13 @@ local InputEnded = script.Parent.InputEnded
 
 local TS = game:GetService("TweenService")
 
-ValueTable.FDoorTIOpen = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-ValueTable.FDoorTIClose =  TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-ValueTable.R = false
-ValueTable.M = false
-ValueTable.LichtNum = 0
+local ValueTable = {
+	FDoorTIOpen = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+	FDoorTIClose =  TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+	R = false,
+	M = false,
+	LichtNum = 0,
+}
 
 local GearboxGui = script.Parent.Parent.Dash.Gearbox.G.Gear
 
